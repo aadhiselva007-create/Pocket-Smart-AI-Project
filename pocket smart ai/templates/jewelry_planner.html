@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jewelry Budget Planner</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="logo">PocketSmart</a>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/home-planner">Home Planner</a>
+            <a href="/party-planner">Party Planner</a>
+            <a href="/history">History</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>Jewelry Budget Planner</h2>
+            <form id="jewelryForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Total Budget (₹)</label>
+                    <input type="number" id="total_budget" required placeholder="5000">
+                </div>
+                <div class="form-group">
+                    <label>Occasion</label>
+                    <input type="text" id="occasion" required placeholder="Wedding, Birthday, Party">
+                </div>
+                <div class="form-group">
+                    <label>Style Preferences</label>
+                    <textarea id="preferences" placeholder="Gold plated, minimal, silver..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Upload Outfit Image (Optional)</label>
+                    <input type="file" id="image" accept="image/*">
+                </div>
+                <button type="submit" class="btn" id="submitBtn">Get Recommendations</button>
+            </form>
+        </div>
+
+        <div id="results" class="card results-box">
+            <h2>Style Recommendations</h2>
+            <div id="recommendationContent"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('jewelryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Analyzing with Multimodal AI...";
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('total_budget', document.getElementById('total_budget').value);
+            formData.append('occasion', document.getElementById('occasion').value);
+            formData.append('preferences', document.getElementById('preferences').value);
+            
+            const fileInput = document.getElementById('image');
+            if (fileInput.files[0]) {
+                formData.append('image', fileInput.files[0]);
+            }
+
+            const res = await fetch('/jewelry-budget', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+            btn.innerText = "Get Recommendations";
+            btn.disabled = false;
+
+            const resBox = document.getElementById('results');
+            const content = document.getElementById('recommendationContent');
+            resBox.style.display = 'block';
+
+            let html = '';
+            if (data.outfit_analysis) {
+                html += `<div style="background:#e0f2fe;padding:1rem;border-radius:6px;margin-bottom:1rem;">
+                    <h4>Outfit Analysis</h4>
+                    <p><strong>Style:</strong> ${data.outfit_analysis.style || 'N/A'}</p>
+                    <p><strong>Colors:</strong> ${(data.outfit_analysis.colors || []).join(', ')}</p>
+                </div>`;
+            }
+
+            (data.jewelry_recommendations || []).forEach(itm => {
+                html += `
+                    <div class="item-card">
+                        <h4>${itm.item_type} - ₹${itm.estimated_price}</h4>
+                        <p>${itm.description}</p>
+                        <div class="shop-links">
+                            ${itm.shopping_links?.amazon ? `<a href="${itm.shopping_links.amazon}" target="_blank">Amazon</a>` : ''}
+                            ${itm.shopping_links?.flipkart ? `<a href="${itm.shopping_links.flipkart}" target="_blank">Flipkart</a>` : ''}
+                            ${itm.shopping_links?.caratlane ? `<a href="${itm.shopping_links.caratlane}" target="_blank">Caratlane</a>` : ''}
+                            ${itm.shopping_links?.tanishq ? `<a href="${itm.shopping_links.tanishq}" target="_blank">Tanishq</a>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            content.innerHTML = html;
+        });
+    </script>
+</body>
+</html>

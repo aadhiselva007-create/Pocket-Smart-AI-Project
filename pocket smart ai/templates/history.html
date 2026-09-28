@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recommendation History</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="logo">PocketSmart</a>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/home-planner">Home Planner</a>
+            <a href="/party-planner">Party Planner</a>
+            <a href="/jewelry-planner">Jewelry Planner</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2>Your Recommendation History</h2>
+        <div id="historyList" style="margin-top: 1.5rem;">
+            <p>Loading history...</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadHistory() {
+            const res = await fetch('/recommendation-history');
+            const data = await res.json();
+            const container = document.getElementById('historyList');
+            
+            if (!data.history || data.history.length === 0) {
+                container.innerHTML = '<p>No previous plans found.</p>';
+                return;
+            }
+
+            let html = '';
+            data.history.forEach(item => {
+                html += `
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <h3>${item.type.toUpperCase()} PLAN</h3>
+                            <small style="color:#64748b;">${item.timestamp}</small>
+                        </div>
+                        <p style="margin: 0.5rem 0;"><strong>Input:</strong> ${item.input}</p>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        loadHistory();
+    </script>
+</body>
+</html>

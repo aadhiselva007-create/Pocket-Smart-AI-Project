@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Party Budget Planner</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="logo">PocketSmart</a>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/home-planner">Home Planner</a>
+            <a href="/jewelry-planner">Jewelry Planner</a>
+            <a href="/history">History</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>Party Budget Planner</h2>
+            <form id="partyForm">
+                <div class="form-group">
+                    <label>Total Budget (₹)</label>
+                    <input type="number" id="total_budget" required placeholder="15000">
+                </div>
+                <div class="form-group">
+                    <label>Event Type</label>
+                    <input type="text" id="party_type" required placeholder="Birthday, Wedding, Corporate">
+                </div>
+                <div class="form-group">
+                    <label>Number of Guests</label>
+                    <input type="number" id="num_guests" required placeholder="20">
+                </div>
+                <div class="form-group">
+                    <label>Party Needs</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="needs_catering" checked> Catering</label>
+                        <label><input type="checkbox" id="needs_decoration" checked> Decoration</label>
+                        <label><input type="checkbox" id="needs_entertainment"> Entertainment</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn" id="submitBtn">Generate Budget Plan</button>
+            </form>
+        </div>
+
+        <div id="results" class="card results-box">
+            <h2>Your Party Plan</h2>
+            <div id="recommendationContent"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('partyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Analyzing with Gemini AI...";
+            btn.disabled = true;
+
+            const payload = {
+                total_budget: parseFloat(document.getElementById('total_budget').value),
+                party_type: document.getElementById('party_type').value,
+                num_guests: parseInt(document.getElementById('num_guests').value),
+                needs_catering: document.getElementById('needs_catering').checked,
+                needs_decoration: document.getElementById('needs_decoration').checked,
+                needs_entertainment: document.getElementById('needs_entertainment').checked
+            };
+
+            const res = await fetch('/party-budget', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            btn.innerText = "Generate Budget Plan";
+            btn.disabled = false;
+
+            const resBox = document.getElementById('results');
+            const content = document.getElementById('recommendationContent');
+            resBox.style.display = 'block';
+
+            let html = `<p><strong>Remaining Budget:</strong> ₹${data.remaining_budget || 0}</p><br>`;
+            (data.budget_breakdown || []).forEach(cat => {
+                html += `<h3>${cat.category.toUpperCase()}</h3>`;
+                cat.items.forEach(itm => {
+                    html += `
+                        <div class="item-card">
+                            <h4>${itm.name} - ₹${itm.estimated_price}</h4>
+                            <p>${itm.description}</p>
+                            <div class="shop-links">
+                                ${itm.shopping_links?.swiggy ? `<a href="${itm.shopping_links.swiggy}" target="_blank">Swiggy</a>` : ''}
+                                ${itm.shopping_links?.zomato ? `<a href="${itm.shopping_links.zomato}" target="_blank">Zomato</a>` : ''}
+                                ${itm.shopping_links?.amazon ? `<a href="${itm.shopping_links.amazon}" target="_blank">Amazon</a>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+            content.innerHTML = html;
+        });
+    </script>
+</body>
+</html>

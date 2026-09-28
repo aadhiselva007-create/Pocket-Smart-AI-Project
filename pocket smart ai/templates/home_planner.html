@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home Interior Budget Planner</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="logo">PocketSmart</a>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/party-planner">Party Planner</a>
+            <a href="/jewelry-planner">Jewelry Planner</a>
+            <a href="/history">History</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>Home Interior Budget Planner</h2>
+            <form id="homeForm">
+                <div class="form-group">
+                    <label>Total Budget (₹)</label>
+                    <input type="number" id="total_budget" required placeholder="50000">
+                </div>
+                <div class="form-group">
+                    <label>Number of Lights/Fixtures</label>
+                    <input type="number" id="num_lights" value="4">
+                </div>
+                <div class="form-group">
+                    <label>Number of Ceiling Fans</label>
+                    <input type="number" id="num_fans" value="2">
+                </div>
+                <div class="form-group">
+                    <label>Number of Furniture Pieces</label>
+                    <input type="number" id="num_furniture" value="2">
+                </div>
+                <div class="form-group">
+                    <label>Number of Dining Tables</label>
+                    <input type="number" id="num_dining_tables" value="1">
+                </div>
+                <div class="form-group">
+                    <label>Rooms to Include</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="has_living_room" checked> Living Room</label>
+                        <label><input type="checkbox" id="has_kitchen" checked> Kitchen</label>
+                        <label><input type="checkbox" id="has_bedroom"> Bedroom</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn" id="submitBtn">Generate Recommendations</button>
+            </form>
+        </div>
+
+        <div id="results" class="card results-box">
+            <h2>Your Recommendations</h2>
+            <div id="recommendationContent"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('homeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Analyzing with Gemini AI...";
+            btn.disabled = true;
+
+            const payload = {
+                total_budget: parseFloat(document.getElementById('total_budget').value),
+                num_lights: parseInt(document.getElementById('num_lights').value),
+                num_fans: parseInt(document.getElementById('num_fans').value),
+                num_furniture: parseInt(document.getElementById('num_furniture').value),
+                num_dining_tables: parseInt(document.getElementById('num_dining_tables').value),
+                has_living_room: document.getElementById('has_living_room').checked,
+                has_kitchen: document.getElementById('has_kitchen').checked,
+                has_bedroom: document.getElementById('has_bedroom').checked
+            };
+
+            const res = await fetch('/home-budget', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            btn.innerText = "Generate Recommendations";
+            btn.disabled = false;
+
+            const resBox = document.getElementById('results');
+            const content = document.getElementById('recommendationContent');
+            resBox.style.display = 'block';
+
+            let html = `<p><strong>Remaining Budget:</strong> ₹${data.remaining_budget || 0}</p><br>`;
+            (data.budget_breakdown || []).forEach(cat => {
+                html += `<h3>${cat.category.toUpperCase()} (₹${cat.allocation})</h3>`;
+                cat.items.forEach(itm => {
+                    html += `
+                        <div class="item-card">
+                            <h4>${itm.name} (Qty: ${itm.quantity}) - ₹${itm.estimated_price}</h4>
+                            <p>${itm.description}</p>
+                            <div class="shop-links">
+                                ${itm.shopping_links?.amazon ? `<a href="${itm.shopping_links.amazon}" target="_blank">Amazon</a>` : ''}
+                                ${itm.shopping_links?.flipkart ? `<a href="${itm.shopping_links.flipkart}" target="_blank">Flipkart</a>` : ''}
+                                ${itm.shopping_links?.ikea ? `<a href="${itm.shopping_links.ikea}" target="_blank">IKEA</a>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+            content.innerHTML = html;
+        });
+    </script>
+</body>
+</html>

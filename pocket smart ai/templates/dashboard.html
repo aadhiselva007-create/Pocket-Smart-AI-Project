@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PocketSmart - Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="logo">PocketSmart</a>
+        <div class="nav-links">
+            <a href="/home-planner">Home Planner</a>
+            <a href="/party-planner">Party Planner</a>
+            <a href="/jewelry-planner">Jewelry Planner</a>
+            <a href="/history">History</a>
+            <form action="/logout" method="post" style="display:inline;">
+                <button type="submit" style="background:none;border:none;color:white;cursor:pointer;margin-left:1.5rem;">Logout</button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2>Welcome, {{ user.username }}!</h2>
+        <p style="margin-bottom: 2rem;">Choose a budget planner to get started:</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+            <div class="card" style="text-align: center;">
+                <h3>🏠 Home Budget</h3>
+                <p style="margin: 1rem 0;">Decor and furniture within your budget.</p>
+                <a href="/home-planner" class="btn">Get Started</a>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3>🎉 Party Budget</h3>
+                <p style="margin: 1rem 0;">Plan food, venue, and decor smoothly.</p>
+                <a href="/party-planner" class="btn">Get Started</a>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3>💎 Jewelry Budget</h3>
+                <p style="margin: 1rem 0;">AI styling matched to your outfit & budget.</p>
+                <a href="/jewelry-planner" class="btn">Get Started</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
